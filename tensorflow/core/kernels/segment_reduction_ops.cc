@@ -24,6 +24,7 @@ limitations under the License.
 #include <vector>
 #include "third_party/eigen3/Eigen/Core"
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include "unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h"
 #include "tensorflow/core/framework/numeric_op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
@@ -66,6 +67,19 @@ static bool SegmentReductionDoValidation(OpKernelContext* c,
                                          const Tensor& segment_ids) {
   SegmentReductionValidationHelper(c, input, segment_ids);
   return c->status().ok();
+}
+
+namespace {
+template <typename T, typename Index, typename Reducer>
+struct ReductionOpFunctor {
+  void operator()(typename Eigen::TensorMap<Eigen::Tensor<const T, 2, Eigen::RowMajor>, Eigen::Unaligned> &in, Eigen::TensorMap<Eigen::Tensor<T, 1, Eigen::RowMajor>, Eigen::Unaligned> &out) {
+  }
+};
+template <typename T, typename Index, typename Reducer>
+struct TupleReductionOpFunctor {
+  void operator()(typename Eigen::TensorMap<Eigen::Tensor<const T, 2, Eigen::RowMajor>, Eigen::Unaligned> &in, Eigen::TensorMap<Eigen::Tensor<T, 1, Eigen::RowMajor>, Eigen::Unaligned> &out) {
+  }
+};
 }
 
 // This operator handles reducing segments along the first dimension.
@@ -183,7 +197,8 @@ class SegmentReductionOp : public OpKernel {
             InT;
         InT in_slice(in_slice_ptr, in_slice_shape);
 
-        out_slice = in_slice.reduce(dims_to_reduce, Reducer());
+        //out_slice = in_slice.reduce(dims_to_reduce, Reducer());
+        //ReductionOp()(in_slice, out_slice);
       }
       if (end >= num_indices) break;
       start = end;
@@ -324,8 +339,24 @@ class SegmentSumGPUOp : public AsyncOpKernel {
 
 #define REGISTER_REAL_CPU_KERNELS_ALL(type) \
   REGISTER_REAL_CPU_KERNELS(type, int32);   \
-  REGISTER_REAL_CPU_KERNELS(type, int64)
+  REGISTER_REAL_CPU_KERNELS(type, int64);   \
 
+/*
+  REGISTER_KERNEL_BUILDER(                  \
+      Name("SegmentArgmax")                 \
+          .Device(DEVICE_CPU)               \
+          .TypeConstraint<type>("T")        \
+          .TypeConstraint<int32>("Tindices"),                   \
+      SegmentReductionOp<CPUDevice, type, int32, Eigen::internal::ArgMaxTupleReducer<Eigen::Tuple<int32, type>>, 0); \
+  REGISTER_KERNEL_BUILDER(                  \
+      Name("SegmentArgmax")                 \
+          .Device(DEVICE_CPU)               \
+          .TypeConstraint<type>("T")        \
+          .TypeConstraint<int64>("Tindices"),                   \
+      SegmentReductionOp<CPUDevice, type, int64, Eigen::internal::ArgMaxTupleReducer<Eigen::Tuple<int64, type>>, 0);
+*/
+
+//, TupleReductionOpFunctor>Eigen::internal::ArgMaxTupleReducer<Eigen::Tuple<int64, type>>);
 #define REGISTER_COMPLEX_CPU_KERNELS_ALL(type) \
   REGISTER_COMPLEX_CPU_KERNELS(type, int32);   \
   REGISTER_COMPLEX_CPU_KERNELS(type, int64)
