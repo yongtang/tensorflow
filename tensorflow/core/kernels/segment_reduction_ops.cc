@@ -79,8 +79,8 @@ struct ReductionOpFunctor {
 struct TupleReductionOpFunctor {
     template<typename T, typename Reducer>
     void reduce(Eigen::TensorMap<Eigen::Tensor<const T, 2, Eigen::RowMajor>, Eigen::Unaligned> &in_slice, Eigen::IndexList<Eigen::type2index<0>>& dims_to_reduce, Eigen::TensorMap<Eigen::Tensor<T, 1, Eigen::RowMajor>, Eigen::Unaligned> &out_slice) {
-      Eigen::Tensor<Eigen::Tuple<int32, T>, 0, Eigen::DataLayout> reduced = in_slice.reduce(dims_to_reduce, Reducer());
-      for (int i = 0; i < reduced.size(); i++) {
+      auto reduced = in_slice.reduce(dims_to_reduce, Reducer());
+      for (int i = 0; i < dims_to_reduce.count; i++) {
         out_slice(i) = reduced(i).first;
       }
     }
