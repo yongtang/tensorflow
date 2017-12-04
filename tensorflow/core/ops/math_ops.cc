@@ -1815,6 +1815,36 @@ output: Has same shape as data, except for dimension 0 which
   has size `k`, the number of segments.
 )doc");
 
+REGISTER_OP("SegmentArgmax")
+    .Input("data: T")
+    .Input("segment_ids: Tindices")
+    .Output("output: Tindices")
+    .Attr("T: realnumbertype")
+    .Attr("Tindices: {int32,int64}")
+    .SetShapeFn(SegmentReductionShapeFn)
+    .Doc(R"doc(
+Computes the maximum along segments of a tensor.
+
+Read @{$math_ops#segmentation$the section on segmentation} for an explanation of
+segments.
+
+Computes a tensor such that
+\\(output_i = \max_j(data_j)\\) where `max` is over `j` such
+that `segment_ids[j] == i`.
+
+If the max is empty for a given segment ID `i`, `output[i] = 0`.
+
+<div style="width:70%; margin:auto; margin-bottom:10px; margin-top:20px;">
+<img style="width:100%" src="https://www.tensorflow.org/images/SegmentMax.png" alt>
+</div>
+
+segment_ids: A 1-D tensor whose rank is equal to the rank of `data`'s
+first dimension.  Values should be sorted and can be repeated.
+
+output: Has same shape as data, except for dimension 0 which
+  has size `k`, the number of segments.
+)doc");
+
 REGISTER_OP("UnsortedSegmentSum")
     .Input("data: T")
     .Input("segment_ids: Tindices")

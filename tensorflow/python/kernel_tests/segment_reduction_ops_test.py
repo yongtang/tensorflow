@@ -97,7 +97,8 @@ class SegmentReductionOpTest(SegmentReductionHelper):
                                                        math_ops.segment_mean),
                 (np.ndarray.__mul__, None, math_ops.segment_prod),
                 (np.minimum, None, math_ops.segment_min),
-                (np.maximum, None, math_ops.segment_max)]
+                (np.maximum, None, math_ops.segment_max),
+                (np.argmax, None, math_ops.segment_argmax)]
 
     # A subset of ops has been enabled for complex numbers
     complex_ops_list = [(np.add, None, math_ops.segment_sum),

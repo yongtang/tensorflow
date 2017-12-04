@@ -128,6 +128,7 @@ See the @{$python/math_ops} guide.
 @@segment_min
 @@segment_max
 @@segment_mean
+@@segment_argmax
 @@unsorted_segment_sum
 @@unsorted_segment_max
 @@sparse_segment_sum

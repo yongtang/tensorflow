@@ -76,13 +76,25 @@ struct ReductionOpFunctor {
       out_slice = in_slice.reduce(dims_to_reduce, Reducer());
     }
 };
+
+template<typename T1, typename T2>
+struct MyOp {
+   const T2 operator()(const std::pair<Eigen::Tuple<T1, T2>>& value) const {
+     return value.second;
+   }
+};
+
 struct TupleReductionOpFunctor {
     template<typename T, typename Reducer>
     void reduce(Eigen::TensorMap<Eigen::Tensor<const T, 2, Eigen::RowMajor>, Eigen::Unaligned> &in_slice, Eigen::IndexList<Eigen::type2index<0>>& dims_to_reduce, Eigen::TensorMap<Eigen::Tensor<T, 1, Eigen::RowMajor>, Eigen::Unaligned> &out_slice) {
       auto reduced = in_slice.reduce(dims_to_reduce, Reducer());
-      for (int i = 0; i < dims_to_reduce.count; i++) {
-        out_slice(i) = reduced(i).first;
-      }
+std::cerr << "dims_to_reduce: " << dims_to_reduce.count << std::endl;
+out_slice = reduced.unaryExpr(MyOp<int, T>());
+//std::cerr << "XXXX" << reduced << std::endl;
+//      for (int32 i = 0; i < dims_to_reduce.count; i++) {
+//std::cerr << "XXXX" << reduced << std::endl;
+        //out_slice(i) = reduced(i).first;
+//      }
     }
 };
 }
