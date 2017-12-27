@@ -103,6 +103,22 @@ class UniqueWithCountsTest(test.TestCase):
     for value, count in zip(tf_y, tf_count):
       self.assertEqual(count, np.sum(x == value))
 
+  def testInt32Axis(self):
+    # The test will need to switch to unique_with_counts once
+    # v2 is used.
+    x = np.array([[1, 0, 0], [1, 0, 0], [2, 0, 0]])
+    with self.test_session() as sess:
+      y0, idx0, count0 = gen_array_ops._unique_with_counts_v2(x, axis=[0])
+      tf_y0, tf_idx0, tf_count0 = sess.run([y0, idx0, count0])
+      y1, idx1, count1 = gen_array_ops._unique_with_counts_v2(x, axis=[1])
+      tf_y1, tf_idx1, tf_count1 = sess.run([y1, idx1, count1])
+    self.assertAllEqual(tf_y0, np.array([[1, 0, 0], [2, 0, 0]]))
+    self.assertAllEqual(tf_idx0, np.array([0, 0, 1]))
+    self.assertAllEqual(tf_count0, np.array([2, 1]))
+    self.assertAllEqual(tf_y1, np.array([[1, 0], [1, 0], [2, 0]]))
+    self.assertAllEqual(tf_idx1, np.array([0, 1, 1]))
+    self.assertAllEqual(tf_count1, np.array([1, 2]))
+
   def testInt32OutIdxInt64(self):
     x = np.random.randint(2, high=10, size=7000)
     with self.test_session() as sess:
