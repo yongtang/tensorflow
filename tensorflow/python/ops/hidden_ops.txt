@@ -29,6 +29,8 @@ Squeeze
 Slice
 TileGrad  # Exported through array_grad instead of array_ops.
 ZerosLike  # TODO(josh11b): Use this instead of the Python version.
+UniqueWithCountsV2
+UniqueWithCounts
 Unpack
 
 # candidate_sampling_ops
