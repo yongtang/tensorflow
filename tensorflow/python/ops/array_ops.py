@@ -2549,6 +2549,14 @@ def reverse(tensor, axis, name=None):
 reverse.__doc__ = gen_array_ops.reverse_v2.__doc__
 
 
+# This is the python wrapper for unique_with_counts in preparation
+# to switch to v2 version (with axis).
+def unique_with_counts(x, out_idx=dtypes.int32, name=None):
+  return gen_array_ops._unique_with_counts(x, out_idx, name)
+
+unique_with_counts.__doc__ = gen_array_ops._unique_with_counts.__doc__
+
+
 # pylint: disable=redefined-builtin
 def reverse_sequence(input,
                      seq_lengths,
