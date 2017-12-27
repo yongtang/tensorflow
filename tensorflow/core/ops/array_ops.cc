@@ -2154,6 +2154,43 @@ idx: 1-D.
 count: 1-D.
 )doc");
 
+// --------------------------------------------------------------------------
+REGISTER_OP("UniqueWithCountsV2")
+    .Input("x: T")
+    .Input("axis: int64")
+    .Output("y: T")
+    .Output("idx: out_idx")
+    .Output("count: out_idx")
+    .Attr("T: type")
+    .Attr("out_idx: {int32, int64} = DT_INT32")
+    .SetShapeFn([](InferenceContext* c) {
+      auto uniq = c->Vector(InferenceContext::kUnknownDim);
+      c->set_output(0, uniq);
+      c->set_output(1, c->input(0));
+      c->set_output(2, uniq);
+      return Status::OK();
+    })
+    .Doc(R"doc(
+Finds unique elements along axis in a tensor.
+
+This operation returns a tensor `y` containing all of the unique elements
+along the `axis` of `x`, sorted in the same order that they occur in
+the `axis` direction of `x`. This operation also returns a
+tensor `idx` the same size as the elements along the `axis` dimension of `x`.
+It contains the index of each value of `axis` dimension of `x` in the unique
+output `y`. Finally, it returns a third tensor `count` that
+contains the count of each element of `y` in `axis` dimension of `x`.
+
+x: A `Tensor`.
+axis: A `Tensor` of type `int64` (default: 0). The axis of the Tensor to
+  find the unique elements.
+y: A `Tensor`. Unique elements along the `axis` of `Tensor` x.
+idx: A 1-D `Tensor`. Has the same type as x that contains the index of each
+  value of x along `axis` dimension in the output y.
+count: A 1-D `Tensor` that contains the count of each element of `y`
+  in `axis` dimension of `x`.
+)doc");
+
 namespace {
 
 Status ShapeShapeFn(InferenceContext* c) {
