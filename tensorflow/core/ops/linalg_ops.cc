@@ -234,6 +234,13 @@ REGISTER_OP("MatrixInverse")
     .Attr("T: {double, float, complex64, complex128}")
     .SetShapeFn(BatchUnchangedSquareShapeFn);
 
+REGISTER_OP("MatrixSqrt")
+    .Input("input: T")
+    .Output("output: T")
+    .Attr("adjoint: bool = False")
+    .Attr("T: {double, float, complex64, complex128}")
+    .SetShapeFn(BatchUnchangedSquareShapeFn);
+
 REGISTER_OP("MatrixExponential")
     .Input("input: T")
     .Output("output: T")

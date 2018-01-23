@@ -20,7 +20,7 @@ from __future__ import print_function
 
 
 import numpy as np
-
+import sys
 from tensorflow.python.client import session
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes
@@ -54,6 +54,15 @@ class LogarithmOpTest(test.TestCase):
          np.expand_dims(matrix2, 0)])
     matrix_batch = np.tile(matrix_batch, [2, 3, 1, 1])
     return matrix_batch
+
+  def testSqrt(self):
+    # 2x2 matrices
+    x = np.array([[0.5, -0.866025], [0.866025, 0.5]]).astype(np.float32)
+    with self.test_session(use_gpu=True):
+      # Verify that expm(logm(A)) == A.
+      tf_ans = gen_linalg_ops.matrix_sqrt(x)
+      out = tf_ans.eval()
+      sys.stderr.write("SQRT:\n"+str(out)+"\n")
 
   def testNonsymmetric(self):
     # 2x2 matrices

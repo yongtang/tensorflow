@@ -2350,6 +2350,7 @@ cc_library(
         ":matrix_logarithm_op",
         ":matrix_solve_ls_op",
         ":matrix_solve_op",
+        ":matrix_sqrt_op",
         ":matrix_triangular_solve_op",
         ":qr_op",
         ":self_adjoint_eig_op",
@@ -2416,6 +2417,12 @@ tf_kernel_library(
 tf_kernel_library(
     name = "matrix_exponential_op",
     prefix = "matrix_exponential_op",
+    deps = LINALG_DEPS,
+)
+
+tf_kernel_library(
+    name = "matrix_sqrt_op",
+    prefix = "matrix_sqrt_op",
     deps = LINALG_DEPS,
 )
 
