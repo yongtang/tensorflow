@@ -275,7 +275,7 @@ class DecodeImageOp : public OpKernel {
           png::CommonFinishDecode(
               reinterpret_cast<png_bytep>(output->flat<uint8>().data()),
               decode.channels * width * sizeof(uint8), &decode),
-          errors::InvalidArgument("Invalid PNG data, size ", input.size()));
+          errors::InvalidArgument("Invalid PNG data (A), size ", input.size()));
     } else {
       // Finish decoding png
       OP_REQUIRES(
@@ -283,7 +283,7 @@ class DecodeImageOp : public OpKernel {
           png::CommonFinishDecode(
               reinterpret_cast<png_bytep>(output->flat<uint16>().data()),
               decode.channels * width * sizeof(uint16), &decode),
-          errors::InvalidArgument("Invalid PNG data, size ", input.size()));
+          errors::InvalidArgument("Invalid PNG data (B), size ", input.size()));
     }
   }
 

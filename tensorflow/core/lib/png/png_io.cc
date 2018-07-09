@@ -21,6 +21,7 @@ limitations under the License.
 #include <string>
 #include <utility>
 #include <vector>
+#include <iostream>
 // NOTE(skal): we don't '#include <setjmp.h>' before png.h as it otherwise
 // provokes a compile error. We instead let png.h include what is needed.
 
@@ -80,19 +81,23 @@ void ErrorHandler(png_structp png_ptr, png_const_charp msg) {
   ctx->error_condition = true;
   // To prevent log spam, errors are logged as VLOG(1) instead of ERROR.
   VLOG(1) << "PNG error: " << msg;
+  std::cerr << "PNG error: " << msg << std::endl;
   longjmp(png_jmpbuf(png_ptr), 1);
 }
 
 void WarningHandler(png_structp png_ptr, png_const_charp msg) {
   LOG(WARNING) << "PNG warning: " << msg;
+  std::cerr << "PNG warning: " << msg << std::endl;
 }
 
 void StringReader(png_structp png_ptr, png_bytep data, png_size_t length) {
   DecodeContext* const ctx = bit_cast<DecodeContext*>(png_get_io_ptr(png_ptr));
   if (static_cast<png_size_t>(ctx->data_left) < length) {
     memset(data, 0, length);
+    std::cerr << "BYTES TO READ:" << length << "|" << ctx->data_left << std::endl;
     png_error(png_ptr, "More bytes requested to read than available");
   } else {
+    std::cerr << "BYTES READ:" << length << "|" << ctx->data_left << std::endl;
     memcpy(data, ctx->data, length);
     ctx->data += length;
     ctx->data_left -= length;
@@ -201,17 +206,17 @@ bool CommonInitDecode(StringPiece png_string, int desired_channels,
   context->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, context,
                                             ErrorHandler, WarningHandler);
   if (!context->png_ptr) {
-    VLOG(1) << ": DecodePNG <- png_create_read_struct failed";
+    std::cerr << ": DecodePNG <- png_create_read_struct failed" << std::endl;
     return false;
   }
   if (setjmp(png_jmpbuf(context->png_ptr))) {
-    VLOG(1) << ": DecodePNG error trapped.";
+    std::cerr << ": DecodePNG error trapped." << std::endl;
     CommonFreeDecode(context);
     return false;
   }
   context->info_ptr = png_create_info_struct(context->png_ptr);
   if (!context->info_ptr || context->error_condition) {
-    VLOG(1) << ": DecodePNG <- png_create_info_struct failed";
+    std::cerr << ": DecodePNG <- png_create_info_struct failed" << std::endl;
     CommonFreeDecode(context);
     return false;
   }
@@ -222,16 +227,19 @@ bool CommonInitDecode(StringPiece png_string, int desired_channels,
   png_get_IHDR(context->png_ptr, context->info_ptr, &context->width,
                &context->height, &context->bit_depth, &context->color_type,
                nullptr, nullptr, nullptr);
+std::cerr << "XXX LINE 1" << std::endl;
   if (context->error_condition) {
-    VLOG(1) << ": DecodePNG <- error during header parsing.";
+    std::cerr << ": DecodePNG <- error during header parsing." << std::endl;
     CommonFreeDecode(context);
     return false;
   }
+std::cerr << "XXX LINE 2" << std::endl;
   if (context->width <= 0 || context->height <= 0) {
-    VLOG(1) << ": DecodePNG <- invalid dimensions";
+    std::cerr << ": DecodePNG <- invalid dimensions" << std::endl;
     CommonFreeDecode(context);
     return false;
   }
+std::cerr << "XXX LINE 3" << std::endl;
   if (context->channels == 0) {  // Autodetect number of channels
     context->channels = png_get_channels(context->png_ptr, context->info_ptr);
   }
@@ -286,8 +294,10 @@ bool CommonInitDecode(StringPiece png_string, int desired_channels,
       png_set_gray_to_rgb(context->png_ptr);  // Enable gray -> RGB conversion
   }
 
+std::cerr << "XXX LINE 4" << std::endl;
   // Must come last to incorporate all requested transformations.
   png_read_update_info(context->png_ptr, context->info_ptr);
+std::cerr << "XXX LINE 5" << std::endl;
   return true;
 }
 
@@ -298,6 +308,7 @@ bool CommonFinishDecode(png_bytep data, int row_bytes, DecodeContext* context) {
   // within *this* function (and not CommonInitDecode())
   if (setjmp(png_jmpbuf(context->png_ptr))) {
     VLOG(1) << ": DecodePNG error trapped.";
+std::cerr << ": DecodePNG error trapped." << std::endl;
     CommonFreeDecode(context);
     return false;
   }

@@ -242,11 +242,11 @@ def tf_workspace(path_prefix="", tf_repo_name=""):
   tf_http_archive(
       name = "png_archive",
       urls = [
-          "https://mirror.bazel.build/github.com/glennrp/libpng/archive/v1.6.34.tar.gz",
-          "https://github.com/glennrp/libpng/archive/v1.6.34.tar.gz",
+          "https://mirror.bazel.build/github.com/glennrp/libpng/archive/2471434d29a8a006e8ca8e5b286c37b8604263b1.tar.gz",
+          "https://github.com/glennrp/libpng/archive/2471434d29a8a006e8ca8e5b286c37b8604263b1.tar.gz",
       ],
-      sha256 = "e45ce5f68b1d80e2cb9a2b601605b374bdf51e1798ef1c2c2bd62131dfcf9eef",
-      strip_prefix = "libpng-1.6.34",
+      sha256 = "cbea430f8187a1cf6b8f54d42e3d04c84b3d9da18a20ede9cc0bd4de0b8fabc9",
+      strip_prefix = "libpng-2471434d29a8a006e8ca8e5b286c37b8604263b1",
       build_file = clean_dep("//third_party:png.BUILD"),
       patch_file = clean_dep("//third_party:png_fix_rpi.patch"),
   )
