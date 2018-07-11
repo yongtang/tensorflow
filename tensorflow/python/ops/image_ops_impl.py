@@ -2132,10 +2132,8 @@ def non_max_suppression_with_overlaps(overlaps,
   with ops.name_scope(name, 'non_max_suppression_overlaps'):
     overlap_threshold = ops.convert_to_tensor(
         overlap_threshold, name='overlap_threshold')
-    # pylint: disable=protected-access
     return gen_image_ops.non_max_suppression_with_overlaps(
         overlaps, scores, max_output_size, overlap_threshold, score_threshold)
-    # pylint: enable=protected-access
 
 
 _rgb_to_yiq_kernel = [[0.299, 0.59590059,
