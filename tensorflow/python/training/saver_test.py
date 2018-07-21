@@ -170,6 +170,28 @@ class SaverTest(test.TestCase):
   def testBasic(self):
     self.basicSaveRestore(variables.Variable)
 
+  def testBasicDtype(self):
+    # Test case for GitHub issue 20487.
+    save_path = os.path.join(self.get_temp_dir(), "dtype")
+
+    with self.test_session() as sess:
+      # With dtype int32.
+      v = variables.Variable(5, name="v")
+      save = saver_module.Saver({"v": v}, restore_sequentially=True)
+      variables.global_variables_initializer().run()
+
+      val = save.save(sess, save_path)
+      self.assertTrue(isinstance(val, six.string_types))
+      self.assertEqual(save_path, val)
+
+      with self.test_session() as sess:
+        # With default dtype float32.
+        v = variable_scope.get_variable("v", shape=[])
+        save = saver_module.Saver({"v": v})
+
+      with self.assertRaisesRegexp(errors_impl.DataLossError, "Invalid dtype"):
+        save.restore(sess, save_path)
+
   @test_util.run_in_graph_and_eager_modes
   def testResourceBasic(self):
     self.basicSaveRestore(resource_variable_ops.ResourceVariable)
