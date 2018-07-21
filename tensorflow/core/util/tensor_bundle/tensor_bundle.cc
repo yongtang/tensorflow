@@ -782,6 +782,13 @@ Status BundleReader::GetValue(const BundleEntryProto& entry, Tensor* val) {
     ret = new Tensor(entry.dtype(), stored_shape);
   }
 
+  // Validates the "dtype" field.
+  if (entry.dtype() != ret->dtype()) {
+    return errors::DataLoss("Invalid dtype in bundle entry: key ", key(),
+                            "; stored dtype ", DataTypeString(entry.dtype()),
+                            "; expected dtype ", DataTypeString(ret->dtype()));
+  }
+
   // Validates the "size" field.
   if (entry.dtype() != DT_STRING && entry.dtype() != DT_VARIANT) {
     if (entry.size() != ret->TotalBytes()) {
