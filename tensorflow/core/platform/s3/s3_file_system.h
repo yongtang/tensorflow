@@ -17,10 +17,64 @@ limitations under the License.
 #define TENSORFLOW_CONTRIB_S3_S3_FILE_SYSTEM_H_
 
 #include <aws/s3/S3Client.h>
+#include <aws/s3-encryption/materials/KMSEncryptionMaterials.h>
+#include <aws/s3-encryption/CryptoConfiguration.h>
+#include <aws/s3-encryption/S3EncryptionClient.h>
 #include "tensorflow/core/platform/env.h"
 #include "tensorflow/core/platform/mutex.h"
 
 namespace tensorflow {
+
+static const char* AWSS3EncryptionTag = "AWSS3Encryption";
+
+class S3OrS3EncryptionClient : public Aws::S3::S3Client {
+public:
+  // The creation of S3Client disables virtual addressing:
+  //   S3Client(clientConfiguration, signPayloads, useVirtualAdressing = true)
+  // The purpose is to address the issue encountered when there is an `.`
+  // in the bucket name. Due to TLS hostname validation or DNS rules,
+  // the bucket may not be resolved. Disabling of virtual addressing
+  // should address the issue. See GitHub issue 16397 for details.
+  S3OrS3EncryptionClient(const Aws::Client::ClientConfiguration& clientConfiguration, const string& kms, const string& key)
+    : Aws::S3::S3Client(clientConfiguration, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false)
+    //, kms_materials_(Aws::MakeShared<Aws::S3Encryption::Materials::KMSEncryptionMaterials>(AWSS3EncryptionTag, kms.c_str(), clientConfiguration))
+    //, crypto_configuration_(Aws::S3Encryption::StorageMethod::INSTRUCTION_FILE, Aws::S3Encryption::CryptoMode::STRICT_AUTHENTICATED_ENCRYPTION)
+    //, s3_encryption_client_(kms_materials_, crypto_configuration_, clientConfiguration)
+    , key_(key.c_str())
+ {
+std::cerr << "KMS = " << kms << ", KEY = " << key << std::endl;
+		auto kmsMaterials = Aws::MakeShared<Aws::S3Encryption::Materials::KMSEncryptionMaterials>(AWSS3EncryptionTag, kms.c_str(), clientConfiguration);
+
+		Aws::S3Encryption::CryptoConfiguration cryptoConfiguration(Aws::S3Encryption::StorageMethod::INSTRUCTION_FILE, Aws::S3Encryption::CryptoMode::STRICT_AUTHENTICATED_ENCRYPTION);
+
+		//auto credentials = Aws::MakeShared<Aws::Auth::DefaultAWSCredentialsProviderChain>("s3Encryption");
+
+		//construct S3 encryption client
+		s3_encryption_client_ = Aws::MakeShared<Aws::S3Encryption::S3EncryptionClient>(AWSS3EncryptionTag, kmsMaterials, cryptoConfiguration, clientConfiguration);
+  }
+
+  Aws::S3::Model::GetObjectOutcome GetObject(const Aws::S3::Model::GetObjectRequest& request) const override {
+    if (key_.length() != 0) {
+     // Aws::S3::Model::GetObjectRequest request_with_key(request);
+     // request_with_key.SetKey(key_);
+      return s3_encryption_client_->GetObject(request);
+    }
+    return Aws::S3::S3Client::GetObject(request);
+  }
+  Aws::S3::Model::PutObjectOutcome PutObject(const Aws::S3::Model::PutObjectRequest& request) const override {
+    if (key_.length() != 0) {
+      //Aws::S3::Model::PutObjectRequest request_with_key(request);
+      //request_with_key.SetKey(key_);
+      return s3_encryption_client_->PutObject(request);
+    }
+    return Aws::S3::S3Client::PutObject(request);
+  }
+private:
+  //std::shared_ptr<Aws::S3Encryption::Materials::KMSEncryptionMaterials> kms_materials_;
+  //Aws::S3Encryption::CryptoConfiguration crypto_configuration_;
+  std::shared_ptr<Aws::S3Encryption::S3EncryptionClient> s3_encryption_client_;
+  Aws::String key_;
+};
 
 class S3FileSystem : public FileSystem {
  public:
@@ -73,9 +127,9 @@ class S3FileSystem : public FileSystem {
   // HTTPS is used.
   // This S3 Client does not support Virtual Hosted–Style Method
   // for a bucket.
-  std::shared_ptr<Aws::S3::S3Client> GetS3Client();
+  std::shared_ptr<S3OrS3EncryptionClient> GetS3Client();
 
-  std::shared_ptr<Aws::S3::S3Client> s3_client_;
+  std::shared_ptr<S3OrS3EncryptionClient> s3_client_;
   // Lock held when checking for s3_client_ initialization.
   mutex client_lock_;
 };

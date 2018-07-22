@@ -48,8 +48,12 @@ cc_library(
         "aws-cpp-sdk-core/source/utils/crypto/factory/**/*.cpp",
         "aws-cpp-sdk-kinesis/include/**/*.h",
         "aws-cpp-sdk-kinesis/source/**/*.cpp",
+        "aws-cpp-sdk-kms/include/**/*.h",
+        "aws-cpp-sdk-kms/source/**/*.cpp",
         "aws-cpp-sdk-s3/include/**/*.h",
         "aws-cpp-sdk-s3/source/**/*.cpp",
+        "aws-cpp-sdk-s3-encryption/include/**/*.h",
+        "aws-cpp-sdk-s3-encryption/source/**/*.cpp",
     ]),
     hdrs = [
         "aws-cpp-sdk-core/include/aws/core/SDKConfig.h",
@@ -75,7 +79,9 @@ cc_library(
     includes = [
         "aws-cpp-sdk-core/include/",
         "aws-cpp-sdk-kinesis/include/",
+        "aws-cpp-sdk-kms/include/",
         "aws-cpp-sdk-s3/include/",
+        "aws-cpp-sdk-s3-encryption/include/",
     ],
     deps = [
         "@curl",

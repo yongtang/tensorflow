@@ -46,10 +46,12 @@ static const char* kS3FileSystemAllocationTag = "S3FileSystemAllocation";
 static const size_t kS3ReadAppendableFileBufferSize = 1024 * 1024;
 static const int kS3GetChildrenMaxKeys = 100;
 
-Aws::Client::ClientConfiguration& GetDefaultClientConfig() {
+Aws::Client::ClientConfiguration& GetDefaultClientConfig(string *kms, string *key) {
   static mutex cfg_lock(LINKER_INITIALIZED);
   static bool init(false);
   static Aws::Client::ClientConfiguration cfg;
+  static string kms_value;
+  static string key_value;
 
   std::lock_guard<mutex> lock(cfg_lock);
 
@@ -124,14 +126,23 @@ Aws::Client::ClientConfiguration& GetDefaultClientConfig() {
         cfg.requestTimeoutMs = timeout;
       }
     }
+    const char* kms_cmk = getenv("S3_KMS");
+    if (kms_cmk) {
+      kms_value.assign(kms_cmk);
+      const char* kms_key = getenv("S3_KMS_KEY");
+      if (kms_key) {
+        key_value.assign(kms_key);
+      }
+    }
 
     init = true;
   }
-
+  *kms = kms_value;
+  *key = key_value;
   return cfg;
 };
 
-void ShutdownClient(Aws::S3::S3Client* s3_client) {
+void ShutdownClient(S3OrS3EncryptionClient* s3_client) {
   if (s3_client != nullptr) {
     delete s3_client;
     Aws::SDKOptions options;
@@ -168,7 +179,7 @@ Status ParseS3Path(const string& fname, bool empty_object_ok, string* bucket,
 class S3RandomAccessFile : public RandomAccessFile {
  public:
   S3RandomAccessFile(const string& bucket, const string& object,
-                     std::shared_ptr<Aws::S3::S3Client> s3_client)
+                     std::shared_ptr<S3OrS3EncryptionClient> s3_client)
       : bucket_(bucket), object_(object), s3_client_(s3_client) {}
 
   Status Read(uint64 offset, size_t n, StringPiece* result,
@@ -198,13 +209,13 @@ class S3RandomAccessFile : public RandomAccessFile {
  private:
   string bucket_;
   string object_;
-  std::shared_ptr<Aws::S3::S3Client> s3_client_;
+  std::shared_ptr<S3OrS3EncryptionClient> s3_client_;
 };
 
 class S3WritableFile : public WritableFile {
  public:
   S3WritableFile(const string& bucket, const string& object,
-                 std::shared_ptr<Aws::S3::S3Client> s3_client)
+                 std::shared_ptr<S3OrS3EncryptionClient> s3_client)
       : bucket_(bucket),
         object_(object),
         s3_client_(s3_client),
@@ -267,7 +278,7 @@ class S3WritableFile : public WritableFile {
  private:
   string bucket_;
   string object_;
-  std::shared_ptr<Aws::S3::S3Client> s3_client_;
+  std::shared_ptr<S3OrS3EncryptionClient> s3_client_;
   bool sync_needed_;
   std::shared_ptr<Aws::Utils::TempFile> outfile_;
 };
@@ -292,7 +303,7 @@ S3FileSystem::S3FileSystem()
 S3FileSystem::~S3FileSystem() {}
 
 // Initializes s3_client_, if needed, and returns it.
-std::shared_ptr<Aws::S3::S3Client> S3FileSystem::GetS3Client() {
+std::shared_ptr<S3OrS3EncryptionClient> S3FileSystem::GetS3Client() {
   std::lock_guard<mutex> lock(this->client_lock_);
 
   if (this->s3_client_.get() == nullptr) {
@@ -305,17 +316,18 @@ std::shared_ptr<Aws::S3::S3Client> S3FileSystem::GetS3Client() {
     options.cryptoOptions.sha256HMACFactory_create_fn = []() {
       return Aws::MakeShared<AWSSHA256HmacFactory>(AWSCryptoAllocationTag);
     };
+    options.cryptoOptions.secureRandomFactory_create_fn = []() {
+      return Aws::MakeShared<AWSSecureRandomFactory>(AWSCryptoAllocationTag);
+    };
+    options.cryptoOptions.aes_GCMFactory_create_fn = []() {
+      return Aws::MakeShared<AWSAESGCMFactory>(AWSCryptoAllocationTag);
+    };
     Aws::InitAPI(options);
 
-    // The creation of S3Client disables virtual addressing:
-    //   S3Client(clientConfiguration, signPayloads, useVirtualAdressing = true)
-    // The purpose is to address the issue encountered when there is an `.`
-    // in the bucket name. Due to TLS hostname validation or DNS rules,
-    // the bucket may not be resolved. Disabling of virtual addressing
-    // should address the issue. See GitHub issue 16397 for details.
-    this->s3_client_ = std::shared_ptr<Aws::S3::S3Client>(new Aws::S3::S3Client(
-        GetDefaultClientConfig(),
-        Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false));
+    string kms;
+    string key;
+    Aws::Client::ClientConfiguration& config = GetDefaultClientConfig(&kms, &key);
+    this->s3_client_ = std::shared_ptr<S3OrS3EncryptionClient>(new S3OrS3EncryptionClient(config, kms, key));
   }
 
   return this->s3_client_;

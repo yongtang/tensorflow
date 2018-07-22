@@ -14,8 +14,10 @@ limitations under the License.
 ==============================================================================*/
 #include <aws/core/Aws.h>
 #include <aws/core/utils/crypto/Factories.h>
+#include <aws/core/utils/crypto/Cipher.h>
 #include <aws/core/utils/crypto/HMAC.h>
 #include <aws/core/utils/crypto/Hash.h>
+#include <aws/core/utils/crypto/SecureRandom.h>
 
 namespace tensorflow {
 static const char* AWSCryptoAllocationTag = "AWSCryptoAllocation";
@@ -30,6 +32,19 @@ class AWSSHA256HmacFactory : public Aws::Utils::Crypto::HMACFactory {
  public:
   std::shared_ptr<Aws::Utils::Crypto::HMAC> CreateImplementation()
       const override;
+};
+
+class AWSSecureRandomFactory : public Aws::Utils::Crypto::SecureRandomFactory {
+ public:
+  std::shared_ptr<Aws::Utils::Crypto::SecureRandomBytes> CreateImplementation()
+      const override;
+};
+
+class AWSAESGCMFactory : public Aws::Utils::Crypto::SymmetricCipherFactory {
+ public:
+    std::shared_ptr<Aws::Utils::Crypto::SymmetricCipher> CreateImplementation(const Aws::Utils::CryptoBuffer& key) const override;
+    std::shared_ptr<Aws::Utils::Crypto::SymmetricCipher> CreateImplementation(const Aws::Utils::CryptoBuffer& key, const Aws::Utils::CryptoBuffer& iv, const Aws::Utils::CryptoBuffer& tag = Aws::Utils::CryptoBuffer(0)) const override;
+    std::shared_ptr<Aws::Utils::Crypto::SymmetricCipher> CreateImplementation(Aws::Utils::CryptoBuffer&& key, Aws::Utils::CryptoBuffer&& iv, Aws::Utils::CryptoBuffer&& tag = Aws::Utils::CryptoBuffer(0)) const override;
 };
 
 }  // namespace tensorflow
