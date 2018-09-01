@@ -170,7 +170,7 @@ struct LaunchLRN<GPUDevice, T> {
   void launch(OpKernelContext* context, OpKernel* kernel, const Tensor& in,
               Tensor* output) {
     OP_REQUIRES(
-        context, beta_ >= 0.01,
+        context, beta_ >= static_cast<T>(0.01),
         errors::InvalidArgument("cuDNN requires beta >= 0.01, got: ", beta_));
 
     OP_REQUIRES(
@@ -178,7 +178,7 @@ struct LaunchLRN<GPUDevice, T> {
         errors::InvalidArgument("cuDNN requires depth_radius in [1, 7], got: ",
                                 depth_radius_));
     OP_REQUIRES(
-        context, bias_ >= 1e-5,
+        context, bias_ >= static_cast<T>(1e-5),
         errors::InvalidArgument("cuDNN requires bias >= 1e-5, got: ", bias_));
 
     // Cast to platform-specific int to avoid conversion warnings.
@@ -195,10 +195,10 @@ struct LaunchLRN<GPUDevice, T> {
         .set_layout(se::dnn::DataLayout::kBatchYXDepth);
 
     se::dnn::NormalizeDescriptor normalize_desc;
-    normalize_desc.set_bias(bias_)
+    normalize_desc.set_bias(static_cast<float>(bias_))
         .set_range(depth_radius_)
-        .set_alpha(alpha_)
-        .set_beta(beta_);
+        .set_alpha(static_cast<float>(alpha_))
+        .set_beta(static_cast<float>(beta_));
 
     auto input_data = StreamExecutorUtil::AsDeviceMemory<T>(in);
     auto output_data = StreamExecutorUtil::AsDeviceMemory<T>(*output);
@@ -295,6 +295,7 @@ TF_CALL_half(REGISTER_CPU);
       Name("LRN").Device(DEVICE_GPU).TypeConstraint<T>("T"), \
       LRNOp<GPUDevice, T>);
 TF_CALL_float(REGISTER_GPU);
+TF_CALL_half(REGISTER_GPU);
 
 #undef REGISTER_GPU
 

@@ -95,9 +95,7 @@ class LRNOpTest(test.TestCase):
   def testCompute(self):
     for _ in range(2):
       self._RunAndVerify(dtypes.float32)
-      # Enable when LRN supports tf.float16 on GPU.
-      if not test.is_gpu_available():
-        self._RunAndVerify(dtypes.float16)
+      self._RunAndVerify(dtypes.float16)
 
   def testGradientsZeroInput(self):
     with self.test_session(use_gpu=True):
@@ -150,9 +148,7 @@ class LRNOpTest(test.TestCase):
   def testGradients(self):
     for _ in range(2):
       self._RunAndVerifyGradients(dtypes.float32)
-      # Enable when LRN supports tf.float16 on GPU.
-      if not test.is_gpu_available():
-        self._RunAndVerifyGradients(dtypes.float16)
+      self._RunAndVerifyGradients(dtypes.float16)
 
 
 if __name__ == "__main__":
