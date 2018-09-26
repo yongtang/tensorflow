@@ -85,6 +85,28 @@ def _Conv2DBackpropFilterGrad(op, grad):
   ]
 
 
+@ops.RegisterGradient("DepthwiseConv2dNativeBackpropInput")
+def _DepthwiseConv2dNativeBackpropInputGrad(op, grad):
+    return [
+        None,
+        nn_ops.depthwise_conv2d_native_backprop_filter(
+            grad,
+            array_ops.shape(op.inputs[1]),
+            op.inputs[2],
+            dilations=op.get_attr("dilations"),
+            strides=op.get_attr("strides"),
+            padding=op.get_attr("padding"),
+            data_format=op.get_attr("data_format")),
+        nn_ops.depthwise_conv2d_native(
+            grad,
+            op.inputs[1],
+            dilations=op.get_attr("dilations"),
+            strides=op.get_attr("strides"),
+            padding=op.get_attr("padding"),
+            data_format=op.get_attr("data_format"))
+    ]
+
+
 @ops.RegisterGradient("Conv3D")
 def _Conv3DGrad(op, grad):
   data_format = op.get_attr("data_format")
