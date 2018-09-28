@@ -31,6 +31,7 @@ from tensorflow.python.ops import nn_ops
 import tensorflow.python.ops.nn_grad  # pylint: disable=unused-import
 from tensorflow.python.platform import test
 from tensorflow.python.platform import tf_logging
+from tensorflow.python.ops import gradients_impl
 
 
 def ConfigsToTest():
@@ -619,6 +620,23 @@ class DepthwiseConv2DTest(test.TestCase):
                                        stride, padding)
       self._CompareBackpropFilterDouble(input_size, filter_size, output_size,
                                         stride, padding)
+
+  def testDepthwiseConv2dBackpropFilterGrad(self):
+    #    t0 = constant_op.constant(input_sizes, shape=[len(input_sizes)])
+    #    t1 = constant_op.constant(x1, shape=filter_sizes)
+    #    t2 = constant_op.constant(x2, shape=output_sizes)
+    #    backprop = nn_ops.depthwise_conv2d_native_backprop_input(
+    #        t0, t1, t2, strides=[1, stride, stride, 1], padding=padding)
+    input = array_ops.placeholder(dtype = dtypes.float32, shape=[1, 4, 4, 3])
+    filter = constant_op.constant(np.random.rand(2, 2, 3, 2).astype(np.float32))
+    strides = [1, 1, 1, 1]
+    conv = nn_impl.depthwise_conv2d(input, filter, strides, "SAME")
+    grad = gradients_impl.gradients(conv, input)[0]
+
+    with self.test_session():
+      error = gradient_checker.compute_gradient_error(
+          filter, filter.get_shape().as_list(), grad, grad.get_shape().as_list())
+      self.assertLess(error, 1e-3)
 
 
 if __name__ == "__main__":
