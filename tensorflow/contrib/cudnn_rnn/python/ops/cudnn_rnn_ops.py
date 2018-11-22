@@ -118,7 +118,7 @@ class CudnnCompatibleGRUCell(rnn_cell_impl.GRUCell):
   def build(self, inputs_shape):
     if inputs_shape[1].value is None:
       raise ValueError("Expected inputs.shape[-1] to be known, saw shape: %s"
-                       % inputs_shape)
+                       % str(inputs_shape) )
 
     input_depth = inputs_shape[1].value
     self._gate_kernel = self.add_variable(
