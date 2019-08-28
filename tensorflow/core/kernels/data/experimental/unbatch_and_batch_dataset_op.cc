@@ -230,10 +230,27 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
           }
         }
 
-        // Finally, resize if needed
+        // Before we return with Status::OK() and *end_of_sequence = false,
+        // we need to separate several situations:
+        // 1) chunk_read == 0:
+        //    We hit the dataset end and no data copied to out_tensors.
+        //    Nothing need to be done other than out_tensors might have been
+        //    allocated (because we don't know at the time of allocation),
+        //    so we need to call out_tensors->clear();
+        // 2) chunk_read > 0 and chunk_read < dataset()->batch_size_:
+        //    We hit the dataset end and out_tensors are not filled to
+        //    `batch size`. Depending on the mode:
+        //    a) drop_remainder = True: clear out the out_tensors, and return.
+        //    b) drop_remainder = False: leave as is, except we have
+        //       to change the shape of out_tensors to `[chunk_read, ...]`.
+	//       because, out_tensors was created  as `[batch_size, ...]`.
+        // 3) chunk_read > 0 and chunk_read == dataset()->batch_size_:
+        //    Nothing needs to be done, continue.
         if (chunk_read > 0) {
+          // shape may need to be adjusted if:
+          // chunk_read < dataset()->batch_size_  (and drop_remainder is False)
           if (chunk_read < dataset()->batch_size_) {
-            // No need to resieze with drop_reminder
+            // No need to resieze with drop_reminder = True
             if (dataset()->drop_remainder_) {
               out_tensors->clear();
               input_impl_.reset();
