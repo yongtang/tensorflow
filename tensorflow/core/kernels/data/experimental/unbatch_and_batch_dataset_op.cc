@@ -39,7 +39,7 @@ namespace data {
 namespace experimental {
 namespace {
 
-constexpr char kDatasetName[] = "ExperimentalUnbatchAndBatch";
+constexpr char kDatasetName[] = "UnbatchAndBatch";
 
 class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
  public:
@@ -274,10 +274,10 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
 };
 
 REGISTER_KERNEL_BUILDER(
-    Name("ExperimentalUnbatchAndBatchDataset").Device(DEVICE_CPU),
+    Name("UnbatchAndBatchDataset").Device(DEVICE_CPU),
     UnbatchAndBatchDatasetOp);
 
-REGISTER_INPUT_COLOCATION_EXEMPTION("ExperimentalUnbatchAndBatchDataset");
+REGISTER_INPUT_COLOCATION_EXEMPTION("UnbatchAndBatchDataset");
 
 }  // namespace
 }  // namespace experimental

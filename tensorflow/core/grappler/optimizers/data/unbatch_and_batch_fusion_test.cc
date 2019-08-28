@@ -75,9 +75,9 @@ TEST(UnbatchAndBatchFusionTest, FuseUnbatchAndBatchNodesIntoOne) {
       graph_utils::ContainsGraphNodeWithName(unbatch_node->name(), output));
   EXPECT_FALSE(
       graph_utils::ContainsGraphNodeWithName(batch_node->name(), output));
-  EXPECT_TRUE(graph_utils::ContainsNodeWithOp("ExperimentalUnbatchAndBatchDataset", output));
+  EXPECT_TRUE(graph_utils::ContainsNodeWithOp("UnbatchAndBatchDataset", output));
   NodeDef unbatch_and_batch_node = output.node(
-      graph_utils::FindGraphNodeWithOp("ExperimentalUnbatchAndBatchDataset", output));
+      graph_utils::FindGraphNodeWithOp("UnbatchAndBatchDataset", output));
   EXPECT_EQ(unbatch_and_batch_node.input_size(), 3);
 
   EXPECT_EQ(unbatch_and_batch_node.input(0), unbatch_node->input(0));
@@ -143,9 +143,9 @@ TEST(UnbatchAndBatchFusionTest, FuseUnbatchAndBatchV2NodesIntoOne) {
       graph_utils::ContainsGraphNodeWithName(unbatch_node->name(), output));
   EXPECT_FALSE(
       graph_utils::ContainsGraphNodeWithName(batch_node->name(), output));
-  EXPECT_TRUE(graph_utils::ContainsNodeWithOp("ExperimentalUnbatchAndBatchDataset", output));
+  EXPECT_TRUE(graph_utils::ContainsNodeWithOp("UnbatchAndBatchDataset", output));
   NodeDef unbatch_and_batch_node = output.node(
-      graph_utils::FindGraphNodeWithOp("ExperimentalUnbatchAndBatchDataset", output));
+      graph_utils::FindGraphNodeWithOp("UnbatchAndBatchDataset", output));
   EXPECT_EQ(unbatch_and_batch_node.input_size(), 3);
   EXPECT_EQ(unbatch_and_batch_node.input(0), unbatch_node->input(0));
   EXPECT_EQ(unbatch_and_batch_node.input(1), batch_node->input(1));

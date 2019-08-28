@@ -975,7 +975,7 @@ REGISTER_OP("ExperimentalUniqueDataset")
     .Attr("output_shapes: list(shape) >= 1")
     .SetShapeFn(shape_inference::ScalarShape);
 
-REGISTER_OP("ExperimentalUnbatchAndBatchDataset")
+REGISTER_OP("UnbatchAndBatchDataset")
     .Input("input_dataset: variant")
     .Input("batch_size: int64")
     .Input("drop_remainder: bool")

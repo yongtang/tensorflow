@@ -30,7 +30,7 @@ class UnbatchAndBatchFusionTest(test_base.DatasetTestBase):
   def testUnbatchAndBatchFusion(self):
     dataset = dataset_ops.Dataset.range(10).batch(5).apply(
         optimization.assert_next(
-            ["Map", "ExperimentalUnbatchAndBatch"])).unbatch().batch(2)
+            ["Map", "UnbatchAndBatch"])).unbatch().batch(2)
     options = dataset_ops.Options()
     options.experimental_optimization.apply_default_optimizations = False
     options.experimental_optimization.unbatch_and_batch_fusion = True
