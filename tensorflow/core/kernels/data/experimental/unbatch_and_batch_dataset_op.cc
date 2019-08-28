@@ -160,31 +160,37 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
 
         while (!*end_of_sequence) {
           if (current_index_ < current_batch_size_) {
+            // If out_tensors->size() == 0, then this is the first time
+            // we arrive here for each batched output tensors. We initialize
+            // the out_tensors to pre-allocate the storage. Since batched
+            // output tensors may not be filled by one input tensors, we may
+            // re-enter here again but We will not re-initialize (until
+            // next batched output tensors is needed).
             if (out_tensors->size() == 0) {
 
-              out_tensors->reserve(tensors_.size());
-              elements.reserve(tensors_.size());
-              for (size_t i = 0; i < tensors_.size(); ++i) {
-                TensorShape shape = tensors_[i].shape();
+              out_tensors->reserve(in_tensors_.size());
+              elements.reserve(in_tensors_.size());
+              for (size_t i = 0; i < in_tensors_.size(); ++i) {
+                TensorShape shape = in_tensors_[i].shape();
 
                 shape.RemoveDim(0);
-                elements.emplace_back(ctx->allocator({}), tensors_[i].dtype(), shape);
+                elements.emplace_back(ctx->allocator({}), in_tensors_[i].dtype(), shape);
 
                 shape.InsertDim(0, dataset()->batch_size_);
-                out_tensors->emplace_back(ctx->allocator({}), tensors_[i].dtype(), shape);
+                out_tensors->emplace_back(ctx->allocator({}), in_tensors_[i].dtype(), shape);
               }
             }
 
-            if (out_tensors->size() != tensors_.size()) {
-              return errors::InvalidArgument("number tensors should match previous one, ", tensors_.size(), " vs. ", out_tensors->size());
+            if (out_tensors->size() != in_tensors_.size()) {
+              return errors::InvalidArgument("number tensors should match previous one, ", in_tensors_.size(), " vs. ", out_tensors->size());
             }
 
             int64 chunk_to_read = (current_batch_size_ - current_index_) < (dataset()->batch_size_ - chunk_read) ? (current_batch_size_ - current_index_) : (dataset()->batch_size_ - chunk_read);
-            for (int i = 0; i < tensors_.size(); ++i) {
+            for (int i = 0; i < in_tensors_.size(); ++i) {
               // TODO: concurrent copy?
               for (int64 r = 0; r < chunk_to_read; ++r) {
                 TF_RETURN_IF_ERROR(batch_util::MaybeMoveSliceToElement(
-                    &tensors_[i], &elements[i], current_index_ + r));
+                    &in_tensors_[i], &elements[i], current_index_ + r));
                 TF_RETURN_IF_ERROR(batch_util::CopyElementToSlice(
                     elements[i], &(*out_tensors)[i], chunk_read + r));
               }
@@ -198,27 +204,29 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
             }
           }
 
+	  // If we get here, the current input tensors don't have enough available
+	  // slices to construct a full output batch, so we pull more input.
           current_index_ = 0;
           current_batch_size_ = 0;
-          tensors_.clear();
+          in_tensors_.clear();
           TF_RETURN_IF_ERROR(
-              input_impl_->GetNext(ctx, &tensors_, end_of_sequence));
+              input_impl_->GetNext(ctx, &in_tensors_, end_of_sequence));
           if (!*end_of_sequence) {
-            for (size_t i = 0; i < tensors_.size(); ++i) {
-              if (tensors_[i].dims() == 0) {
+            for (size_t i = 0; i < in_tensors_.size(); ++i) {
+              if (in_tensors_[i].dims() == 0) {
                 return errors::InvalidArgument(
                     "Input element must have a non-scalar value in each "
                     "component.");
               }
-              if (tensors_[i].dim_size(0) != tensors_[0].dim_size(0)) {
+              if (in_tensors_[i].dim_size(0) != in_tensors_[0].dim_size(0)) {
                 return errors::InvalidArgument(
                     "Input element must have the same batch size in each "
                     "component. Component 0 had size ",
-                    tensors_[0].dim_size(0), " but component ", i,
-                    " had size, ", tensors_[i].dim_size(0), ".");
+                    in_tensors_[0].dim_size(0), " but component ", i,
+                    " had size, ", in_tensors_[i].dim_size(0), ".");
               }
             }
-            current_batch_size_ = tensors_[0].dim_size(0);
+            current_batch_size_ = in_tensors_[0].dim_size(0);
           }
         }
 
@@ -256,9 +264,13 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
 
      private:
       mutex mu_;
+      // Next slice to read of the current input batch of tensors.
       int64 current_index_ GUARDED_BY(mu_);
+      // The batch size associated with the input tensors (in_tensors_).
       int64 current_batch_size_ GUARDED_BY(mu_);
-      std::vector<Tensor> tensors_ GUARDED_BY(mu_);
+      // The input batch of tensors, saved here as unbatch().batch(n)
+      // might be cross the boundary.
+      std::vector<Tensor> in_tensors_ GUARDED_BY(mu_);
       std::unique_ptr<IteratorBase> input_impl_ GUARDED_BY(mu_);
     };
 
