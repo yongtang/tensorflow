@@ -103,15 +103,6 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
       return "UnbatchAndBatchDatasetOp::Dataset";
     }
 
-    int64 Cardinality() const override {
-      int64 n = input_->Cardinality();
-      if (n == kInfiniteCardinality || n == kUnknownCardinality) {
-        return n;
-      }
-      return n / batch_size_ +
-             (n % batch_size_ == 0 || drop_remainder_ ? 0 : 1);
-    }
-
     Status CheckExternalState() const override {
       return input_->CheckExternalState();
     }
@@ -276,7 +267,16 @@ class UnbatchAndBatchDatasetOp : public UnaryDatasetOpKernel {
      protected:
       std::shared_ptr<model::Node> CreateNode(
           IteratorContext* ctx, model::Node::Args args) const override {
-        return model::MakeKnownRatioNode(std::move(args), dataset()->batch_size_);
+        // Unbatch assumes that all input components have the same leading
+        // dimension. If it is statically known for any component, we model the
+        // transformation using `KnownRatio`. Otherwise, we use `UnknownRatio`.
+        for (auto& shape : dataset()->input_->output_shapes()) {
+          if (shape.dims() > 0 && shape.dim_size(0) > 0) {
+            return model::MakeKnownRatioNode(
+                std::move(args), 1.0 / static_cast<double>(shape.dim_size(0)) * dataset()->batch_size_);
+          }
+        }
+        return model::MakeUnknownRatioNode(std::move(args));
       }
 
      private:
