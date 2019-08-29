@@ -228,6 +228,22 @@ tf_kernel_library(
     ],
 )
 
+tf_cc_test(
+    name = "unbatch_and_batch_dataset_op_test",
+    size = "small",
+    srcs = ["unbatch_and_batch_dataset_op_test.cc"],
+    deps = [
+        ":unbatch_and_batch_dataset_op",
+        "//tensorflow/core:experimental_dataset_ops_op_lib",
+        "//tensorflow/core:framework",
+        "//tensorflow/core:test",
+        "//tensorflow/core:test_main",
+        "//tensorflow/core:testlib",
+        "//tensorflow/core/kernels:cwise_op",
+        "//tensorflow/core/kernels/data:dataset_test_base",
+    ],
+)
+
 tf_kernel_library(
     name = "matching_files_dataset_op",
     srcs = ["matching_files_dataset_op.cc"],
