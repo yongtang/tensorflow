@@ -213,6 +213,7 @@ tf_cc_test(
 tf_kernel_library(
     name = "unbatch_and_batch_dataset_op",
     srcs = ["unbatch_and_batch_dataset_op.cc"],
+    hdrs = ["unbatch_and_batch_dataset_op.h"],
     deps = [
         "//tensorflow/core:array_ops_op_lib",
         "//tensorflow/core:core_cpu_internal",
