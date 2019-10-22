@@ -123,6 +123,8 @@ class FileIO(object):
     if n == -1:
       length = self.size() - self.tell()
     else:
+      if not self._binary_mode:
+        return self._prepare_value(pywrap_tensorflow.ReadFromStreamUTF8(self._read_buf, n))
       length = n
     return self._prepare_value(
         pywrap_tensorflow.ReadFromStream(self._read_buf, length))

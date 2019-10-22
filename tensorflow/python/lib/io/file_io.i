@@ -237,6 +237,67 @@ string ReadFromStream(tensorflow::io::BufferedInputStream* stream,
   return result;
 }
 
+string ReadFromStreamUTF8(tensorflow::io::BufferedInputStream* stream,
+                      size_t bytes,
+                      TF_Status* status) {
+  tensorflow::tstring result;
+  size_t total = 0;
+  while (total < bytes) {
+    // Avoid over read:
+    // 1) read at least bytes (utf8 could be 1/2/3/4)
+    // 2) if string ends with partial utf8 (2/3/4), read remaining (< 4) bytes.
+    // 3) repeat until bytes == utf8 chars
+
+    // 1) read at least bytes - total
+    size_t bytes_to_read = bytes - total;
+    tensorflow::tstring result_read;
+    tensorflow::Status s = stream->ReadNBytes(bytes_to_read, &result_read);
+    if (!s.ok() && s.code() != tensorflow::error::OUT_OF_RANGE) {
+      Set_TF_Status_from_Status(status, s);
+      result.clear();
+      return result;
+    }
+    result += result_read;
+    if (s.code() == tensorflow::error::OUT_OF_RANGE) {
+      break;
+    }
+    // 2) find partial utf8, and read remain (< 4) bytes.
+    size_t remain = 0;
+    for (size_t i = 0; i < result_read.size(); i++) {
+      if (remain > 0) {
+        remain--;
+        continue;
+      }
+      if ((result_read[i] & 0xe0) == 0xc0) {
+        // n = 2
+        remain = 1;
+      }
+      else if ((result_read[i] & 0xf0) == 0xe0) {
+        // n = 3
+        remain = 2;
+      }
+      else if ((result_read[i] & 0xf8) == 0xf0) {
+        // n = 4
+        remain = 3;
+      }
+      total++;
+    }
+    if (remain > 0) {
+      tensorflow::Status s = stream->ReadNBytes(remain, &result_read);
+      if (!s.ok() && s.code() != tensorflow::error::OUT_OF_RANGE) {
+        Set_TF_Status_from_Status(status, s);
+        result.clear();
+        return result;
+      }
+      result += result_read;
+      if (s.code() == tensorflow::error::OUT_OF_RANGE) {
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 %}
 
 // Ensure that the returned object is destroyed when its wrapper is
@@ -272,6 +333,9 @@ void AppendToFile(const string& file_content, tensorflow::WritableFile* file,
                   TF_Status* status);
 int64 TellFile(tensorflow::WritableFile* file, TF_Status* status);
 string ReadFromStream(tensorflow::io::BufferedInputStream* stream,
+                      size_t bytes,
+                      TF_Status* status);
+string ReadFromStreamUTF8(tensorflow::io::BufferedInputStream* stream,
                       size_t bytes,
                       TF_Status* status);
 
