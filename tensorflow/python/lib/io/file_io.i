@@ -238,8 +238,8 @@ string ReadFromStream(tensorflow::io::BufferedInputStream* stream,
 }
 
 string ReadFromStreamUTF8(tensorflow::io::BufferedInputStream* stream,
-                      size_t bytes,
-                      TF_Status* status) {
+                          size_t bytes,
+                          TF_Status* status) {
   tensorflow::tstring result;
   size_t total = 0;
   while (total < bytes) {
