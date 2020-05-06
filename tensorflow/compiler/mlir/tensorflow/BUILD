@@ -531,9 +531,13 @@ cc_library(
     name = "graphdef_util",
     srcs = [
         "translate/export_graphdef.cc",
+        "translate/import_base.cc",
+        "translate/import_graphdef.cc",
     ],
     hdrs = [
         "translate/export_graphdef.h",
+        "translate/import_base.h",
+        "translate/import_graphdef.h",
     ],
     deps = [
         ":export_tf_dialect_op",
@@ -542,6 +546,7 @@ cc_library(
         ":translate_utils",
         "//tensorflow/compiler/jit:shape_inference_helpers",
         "//tensorflow/compiler/mlir:op_or_arg_name_mapper",
+        "//tensorflow/compiler/tf2xla:functionalize_control_flow",
         "//tensorflow/compiler/xla:status_macros",
         "//tensorflow/core:core_cpu",
         "//tensorflow/core:framework",
@@ -586,7 +591,6 @@ cc_library(
         ":tensorflow_types",
         "//tensorflow/cc/saved_model:bundle_v2",
         "//tensorflow/cc/saved_model:loader_lite",
-        "//tensorflow/compiler/tf2xla:functionalize_control_flow",
         "//tensorflow/core/grappler/utils:transitive_fanin",
     ],
 )

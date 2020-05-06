@@ -16,34 +16,11 @@ limitations under the License.
 #ifndef TENSORFLOW_COMPILER_MLIR_TENSORFLOW_TRANSLATE_IMPORT_MODEL_H_
 #define TENSORFLOW_COMPILER_MLIR_TENSORFLOW_TRANSLATE_IMPORT_MODEL_H_
 
-#include <string>
-
-#include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
+#include "tensorflow/compiler/mlir/tensorflow/translate/import_graphdef.h"
 #include "tensorflow/cc/saved_model/bundle_v2.h"
 #include "tensorflow/cc/saved_model/loader.h"
-#include "tensorflow/compiler/mlir/tensorflow/translate/mlir_roundtrip_flags.h"
-#include "tensorflow/core/framework/function.h"
-#include "tensorflow/core/framework/graph.pb.h"
-#include "tensorflow/core/graph/graph.h"
-#include "tensorflow/core/protobuf/graph_debug_info.pb.h"
-#include "tensorflow/stream_executor/lib/statusor.h"
 
 namespace tensorflow {
-
-// Given a GraphDef, returns a MLIR module containing the graph, expressed with
-// tf_executor dialect.
-stream_executor::port::StatusOr<mlir::OwningModuleRef> ConvertGraphdefToMlir(
-    const GraphDef& graphdef, const GraphDebugInfo& debug_info,
-    const GraphImportConfig& specs, mlir::MLIRContext* context,
-    bool add_default_attributes = true);
-
-// Given a Graph, returns a MLIR module containing the graph, expressed with
-// tf_executor dialect.
-stream_executor::port::StatusOr<mlir::OwningModuleRef> ConvertGraphToMlir(
-    const Graph& graph, const GraphDebugInfo& debug_info,
-    const FunctionLibraryDefinition& flib_def, const GraphImportConfig& specs,
-    mlir::MLIRContext* context);
 
 // Given a SavedModel, returns a MLIR module containing the functions, expressed
 // with tf_executor dialect.
