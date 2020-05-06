@@ -649,6 +649,7 @@ tf_cc_shared_object(
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow/cc/saved_model:loader_lite_impl",
+        "//tensorflow/compiler/mlir:mlir_graph_optimization_pass_registration",
         "//tensorflow/core:core_cpu_impl",
         "//tensorflow/core:framework_internal_impl",
         "//tensorflow/core/common_runtime/gpu:gpu_runtime_impl",
