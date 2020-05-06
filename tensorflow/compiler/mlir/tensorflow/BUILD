@@ -528,33 +528,20 @@ cc_library(
 )
 
 cc_library(
-    name = "convert_graphdef",
+    name = "graphdef_util",
     srcs = [
         "translate/export_graphdef.cc",
-        "translate/import_model.cc",
     ],
     hdrs = [
         "translate/export_graphdef.h",
-        "translate/import_model.h",
     ],
     deps = [
-        ":convert_tensor",
-        ":convert_type",
-        ":error_util",
         ":export_tf_dialect_op",
-        ":export_utils",
-        ":mangling_util",
         ":mlir_roundtrip_flags",
         ":tensorflow",
-        ":tensorflow_attributes",
-        ":tensorflow_passes",
-        ":tensorflow_types",
         ":translate_utils",
-        "//tensorflow/cc/saved_model:bundle_v2",
-        "//tensorflow/cc/saved_model:loader_lite",
         "//tensorflow/compiler/jit:shape_inference_helpers",
         "//tensorflow/compiler/mlir:op_or_arg_name_mapper",
-        "//tensorflow/compiler/tf2xla:functionalize_control_flow",
         "//tensorflow/compiler/xla:status_macros",
         "//tensorflow/core:core_cpu",
         "//tensorflow/core:framework",
@@ -562,7 +549,6 @@ cc_library(
         "//tensorflow/core:graph",
         "//tensorflow/core:lib",
         "//tensorflow/core:protos_all_cc",
-        "//tensorflow/core/grappler/utils:transitive_fanin",
         "//tensorflow/core/platform:types",
         "//tensorflow/stream_executor/lib",
         "@com_google_absl//absl/algorithm:container",
@@ -577,6 +563,31 @@ cc_library(
         "@llvm-project//mlir:Pass",
         "@llvm-project//mlir:StandardOps",
         "@llvm-project//mlir:Support",
+    ],
+)
+
+cc_library(
+    name = "convert_graphdef",
+    srcs = [
+        "translate/import_model.cc",
+    ],
+    hdrs = [
+        "translate/import_model.h",
+    ],
+    deps = [
+        ":convert_tensor",
+        ":convert_type",
+        ":error_util",
+        ":export_utils",
+        ":graphdef_util",
+        ":mangling_util",
+        ":tensorflow_attributes",
+        ":tensorflow_passes",
+        ":tensorflow_types",
+        "//tensorflow/cc/saved_model:bundle_v2",
+        "//tensorflow/cc/saved_model:loader_lite",
+        "//tensorflow/compiler/tf2xla:functionalize_control_flow",
+        "//tensorflow/core/grappler/utils:transitive_fanin",
     ],
 )
 
