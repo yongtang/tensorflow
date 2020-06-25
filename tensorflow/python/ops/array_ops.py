@@ -1849,7 +1849,7 @@ def sparse_mask(a, mask_indices, name=None):
 
 @tf_export("unique")
 @dispatch.add_dispatch_support
-def unique(x, out_idx=dtypes.int32, name=None):
+def unique(x, out_idx=dtypes.int32, name=None, axis=None):
   """Finds unique elements in a 1-D tensor.
 
   See also `tf.unique_with_counts`.
@@ -1878,6 +1878,9 @@ def unique(x, out_idx=dtypes.int32, name=None):
     out_idx: An optional tf.DType from: tf.int32, tf.int64. Defaults to
       tf.int32.
     name: A name for the operation (optional).
+    axis: A `Tensor` of type `int64` (default: None). The axis of the Tensor to
+      find the unique elements. In case `axis=None` then x is 1-D and axis is
+      not used.
 
   Returns:
     A tuple of Tensor objects (y, idx).
@@ -1885,14 +1888,11 @@ def unique(x, out_idx=dtypes.int32, name=None):
       idx: A Tensor of type out_idx.
 
   """
-  # TODO(yongtang): switch to v2 once API deprecation
-  # period (3 weeks) pass.
-  # TODO(yongtang): The documentation should also
-  # be updated when switch  to v2.
-  return gen_array_ops.unique(x, out_idx, name)
+  axis = [] if axis is None else [axis]
+  return gen_array_ops.unique_v2(x, axis, out_idx, name)
 
 
-unique.__doc__ = gen_array_ops.unique.__doc__
+unique.__doc__ = gen_array_ops.unique_v2.__doc__
 
 
 @tf_export("unique_with_counts")
