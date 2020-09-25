@@ -118,7 +118,7 @@ Status Env::GetFileSystemForFile(const std::string& fname,
     if (scheme.empty()) {
       scheme = "[local]";
     }
-
+    std::cerr << "XXXXXXXXXX Env::GetFileSystemForFile : " << (int64)(this) << std::endl;
     return errors::Unimplemented("File system scheme '", scheme,
                                  "' not implemented (file: '", fname, "')");
   }
@@ -205,6 +205,7 @@ bool Env::FilesExist(const std::vector<string>& files,
     if (!file_system) {
       fs_result = false;
       if (fs_status) {
+	      std::cerr << "XXXXXXXXXX Env::FileExist : " << (int64)(this) << std::endl;
         Status s = errors::Unimplemented("File system scheme '", itr.first,
                                          "' not implemented");
         local_status.resize(itr.second.size(), s);

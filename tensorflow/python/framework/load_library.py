@@ -175,7 +175,7 @@ def register_filesystem_plugin(plugin_location):
     OSError: When the file to be loaded is not found.
     RuntimeError: when unable to load the library.
   """
-  if file_io.file_exists(plugin_location):
+  if os.path.exists(plugin_location):
     py_tf.TF_RegisterFilesystemPlugin(plugin_location)
 
   else:

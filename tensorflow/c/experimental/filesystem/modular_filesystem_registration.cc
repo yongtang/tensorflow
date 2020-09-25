@@ -235,6 +235,7 @@ static std::unique_ptr<const T> CopyToCore(const T* plugin_ops,
 // Must be called only with `index` a valid index in `info->ops`.
 static Status RegisterFileSystem(const TF_FilesystemPluginInfo* info,
                                  int index) {
+	std::cerr << "XXXXXXXXXX RegisterFileSystem1: " << info->ops[0].scheme << std::endl;
   // Step 1: Copy all the function tables to core TensorFlow memory space
   auto core_filesystem_ops = CopyToCore<TF_FilesystemOps>(
       info->ops[index].filesystem_ops, info->ops[index].filesystem_ops_size);
@@ -258,6 +259,7 @@ static Status RegisterFileSystem(const TF_FilesystemPluginInfo* info,
   TF_DeleteStatus(c_status);
   if (!status.ok()) return status;
 
+	std::cerr << "XXXXXXXXXX RegisterFileSystem9: " << (int64)(Env::Default()) << std::endl;
   // Step 3: Actual registration
   return Env::Default()->RegisterFileSystem(
       info->ops[index].scheme,

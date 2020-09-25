@@ -2571,7 +2571,9 @@ void TF_RegisterFilesystemPlugin(const char* plugin_filename,
   status->status = tensorflow::errors::Unimplemented(
       "FileSystem plugin functionality is not supported on mobile");
 #else
+  std::cerr << "XXXXX TF_RegisterFilesystemPlugin2: " << plugin_filename << std::endl;
   status->status = tensorflow::RegisterFilesystemPlugin(plugin_filename);
+  std::cerr << "XXXXX TF_RegisterFilesystemPlugin3: " << status->status << std::endl;
 #endif  // defined(IS_MOBILE_PLATFORM) || defined(IS_SLIM_BUILD)
 }
 

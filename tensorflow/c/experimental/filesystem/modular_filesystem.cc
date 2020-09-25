@@ -458,6 +458,7 @@ Status ModularWritableFile::Tell(int64* position) {
 }
 
 Status RegisterFilesystemPlugin(const std::string& dso_path) {
+	std::cerr << "XXX: RegisterFilesystemPlugin: " << dso_path << std::endl;
   // Step 1: Load plugin
   Env* env = Env::Default();
   void* dso_handle;
