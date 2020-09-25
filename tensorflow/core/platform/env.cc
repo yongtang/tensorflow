@@ -118,7 +118,8 @@ Status Env::GetFileSystemForFile(const std::string& fname,
     if (scheme.empty()) {
       scheme = "[local]";
     }
-    std::cerr << "XXXXXXXXXX Env::GetFileSystemForFile : " << (int64)(this) << std::endl;
+    std::cerr << "XXXXXXXXXX Env::GetFileSystemForFile1 : " << (int64)(Env::Default()) << std::endl;
+    std::cerr << "XXXXXXXXXX Env::GetFileSystemForFile2 : " << (int64)(this) << std::endl;
     return errors::Unimplemented("File system scheme '", scheme,
                                  "' not implemented (file: '", fname, "')");
   }

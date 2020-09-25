@@ -251,6 +251,7 @@ REGISTER_FILE_SYSTEM("ram", RamFileSystem);
 
 Env* Env::Default() {
   static Env* default_env = new PosixEnv;
+  std::cerr << "XXXXXXXXXXXXXXXXXXXX Env::Default() :" << (int64)(default_env) << std::endl;
   return default_env;
 }
 #endif
