@@ -140,9 +140,9 @@ def load_library(library_location):
     OSError: When the file to be loaded is not found.
     RuntimeError: when unable to load the library.
   """
-  if file_io.file_exists(library_location):
-    if file_io.is_directory(library_location):
-      directory_contents = file_io.list_directory(library_location)
+  if os.path.exists(library_location):
+    if os.path.isdir(library_location):
+      directory_contents = os.listdir(library_location)
 
       kernel_libraries = [
           os.path.join(library_location, f) for f in directory_contents
@@ -158,3 +158,28 @@ def load_library(library_location):
         errno.ENOENT,
         'The file or folder to load kernel libraries from does not exist.',
         library_location)
+
+
+@tf_export('experimental.register_filesystem_plugin')
+def register_filesystem_plugin(plugin_location):
+  """Loads a TensorFlow FileSystem plugin.
+
+  Args:
+    library_location: Path to the plugin.
+      Relative or absolute filesystem path to a dynamic library file.
+
+  Returns:
+    None
+
+  Raises:
+    OSError: When the file to be loaded is not found.
+    RuntimeError: when unable to load the library.
+  """
+  if file_io.file_exists(plugin_location):
+    py_tf.TF_RegisterFilesystemPlugin(plugin_location)
+
+  else:
+    raise OSError(
+        errno.ENOENT,
+        'The file to load file system plugin from does not exist.',
+        plugin_location)
